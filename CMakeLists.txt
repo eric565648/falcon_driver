@@ -142,6 +142,8 @@ add_executable(falcon_driver src/driver.cpp)
 target_link_libraries(falcon_driver ${catkin_LIBRARIES} nifalcon usb-1.0)
 add_executable(falcon_joy src/joy_mode.cpp)
 target_link_libraries(falcon_joy ${catkin_LIBRARIES} nifalcon)
+add_executable(falcon_space src/space_mode.cpp)
+target_link_libraries(falcon_space ${catkin_LIBRARIES} nifalcon)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

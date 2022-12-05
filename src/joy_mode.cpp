@@ -45,7 +45,7 @@ public:
 joyFalcon::joyFalcon(ros::NodeHandle*nh){
 
     // set pid parameter
-    nh->setParam("joy_Kp",100);
+    nh->setParam("joy_Kp",30);
     nh->setParam("joy_Ki",10);
     nh->setParam("joy_Kd",0);
     nh->setParam("joy_max_distance",40);
@@ -103,7 +103,7 @@ void joyFalcon::falcon_pos_cb(const sensor_msgs::JointState &msg_state){
     double max_distance,joy_x,joy_y,joy_z;
     nhptr->getParam("joy_max_distance",max_distance);
 
-    cout<<error<<endl;
+    // cout<<error<<endl;
     joy_x=abs(error[0])>7.5?error[0]:0;
     joy_x=abs(joy_x)>max_distance?max_distance:joy_x;
     joy_x=joy_x/max_distance;
@@ -120,6 +120,15 @@ void joyFalcon::falcon_pos_cb(const sensor_msgs::JointState &msg_state){
     msg_joy.axes.push_back(joy_x);
     msg_joy.axes.push_back(joy_y);
     msg_joy.axes.push_back(joy_z);
+    msg_joy.buttons.push_back(msg_state.position[3]);
+    msg_joy.buttons.push_back(msg_state.position[4]);
+    msg_joy.buttons.push_back(msg_state.position[5]);
+    msg_joy.buttons.push_back(msg_state.position[6]);
+    
+    for(int i;i<6;i++)
+        msg_joy.axes.push_back((double)0);
+        msg_joy.buttons.push_back((double)0);
+    
     joy_pub.publish(msg_joy);
 
     last_t = time_now;

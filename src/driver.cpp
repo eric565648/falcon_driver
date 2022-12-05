@@ -15,6 +15,7 @@
 #include "falcon/util/FalconFirmwareBinaryNvent.h"
 #include "falcon/kinematic/stamper/StamperUtils.h"
 #include "falcon/kinematic/FalconKinematicStamper.h"
+#include "falcon/grip/FalconGripFourButton.h"
 #include "falcon/core/FalconGeometry.h"
 #include "falcon/gmtl/gmtl.h"
 
@@ -103,6 +104,7 @@ bool falcon_initalize(){
 
 	falcon.getFalconFirmware()->setHomingMode(true);
 	// falcon.setFalconKinematic<libnifalcon::FalconKinematicStamper>();
+	falcon.setFalconGrip<libnifalcon::FalconGripFourButton>();
 
 	return true;
 }
@@ -374,6 +376,18 @@ void falconDriver::falconLoop(){
 		FK(encoderAngles, pos_cart);
 		// cout<<pos_cart<<endl;
 
+		u_int digit_inputs,button1=0,button2=0,button3=0,button4=0;
+		digit_inputs=falcon.getFalconGrip()->getDigitalInputs();
+		// cout<<falcon.getFalconGrip()->getDigitalInputs()<<endl;
+		if(digit_inputs & libnifalcon::FalconGripFourButton::BUTTON_1)
+			button1=1;
+		if(digit_inputs & libnifalcon::FalconGripFourButton::BUTTON_2)
+			button2=1;
+		if(digit_inputs & libnifalcon::FalconGripFourButton::BUTTON_3)
+			button3=1;
+		if(digit_inputs & libnifalcon::FalconGripFourButton::BUTTON_4)
+			button4=1;
+
 		//Offset Z so position origin is roughly in the centre of the workspace:
 		gmtl::Vec3d offsetPos(pos_cart);
 		offsetPos[2] -= 0.12;
@@ -382,9 +396,14 @@ void falconDriver::falconLoop(){
 
 		// mm, mm/sec
 		sensor_msgs::JointState msg_joint;
-		msg_joint.position.push_back(offsetPos[0]*1000);
-		msg_joint.position.push_back(offsetPos[1]*1000);
-		msg_joint.position.push_back(offsetPos[2]*1000);
+		msg_joint.position.push_back(offsetPos[0]*1000); // x
+		msg_joint.position.push_back(offsetPos[1]*1000); // y
+		msg_joint.position.push_back(offsetPos[2]*1000); // z
+		msg_joint.position.push_back(button1); // button 1
+		msg_joint.position.push_back(button2); // button 2
+		msg_joint.position.push_back(button3); // button 3
+		msg_joint.position.push_back(button4); // button 4
+		msg_joint.header.stamp=ros::Time::now();
 		joint_state_pub.publish(msg_joint);
 
 		// get all angles
@@ -404,7 +423,8 @@ void falconDriver::falconLoop(){
 
 		// Avoid torque saturation
 		//Find highest torque:
-		double maxTorque=30.0;	//Rather random choice here, could be higher
+		// double maxTorque=30.0;	//Rather random choice here, could be higher
+		double maxTorque=40.0;
 		double largestTorqueValue=0.0;
 		int largestTorqueAxis=-1;
 		for(int i=0; i<3; i++){
